@@ -45,6 +45,9 @@ plot(prices.dat, ylab = "Raw Price",
 
 plot(log.returns, ylab = "Log Returns",
      main = "FTSE 250 Daily Log Returns")
+
+adf.test(as.numeric(prices.dat))
+adf.test(log.numeric)
 ```
 
 <p align="center">
@@ -52,21 +55,14 @@ plot(log.returns, ylab = "Log Returns",
   <img src=".github/images/Log%20Return%20Plot.png" width="48%">
 </p>
 
-Raw prices do not fluctuate around a fixed mean. Log returns fluctuate around zero with time-varying spread, suggesting volatility clustering.
-
-The Augmented Dickey–Fuller test gives a formal check:
-
-```r
-adf.test(as.numeric(prices.dat))
-adf.test(log.numeric)
-```
-
 | Series | ADF p-value | Conclusion (5%) |
 |---|---|---|
 | Raw prices | 0.09745 | Fail to reject unit root → non-stationary |
 | Log returns | $\le 0.01$ | Reject unit root → stationary |
 
 > `tseries::adf.test` truncates p-values at 0.01, so the true value is at most 0.01.
+
+Raw prices do not fluctuate around a fixed mean. Log returns fluctuate around zero with time-varying spread, suggesting volatility clustering.
 
 ---
 
@@ -197,7 +193,8 @@ No remaining serial correlation or ARCH effects — a substantial improvement ov
 
 The AR(1)–GARCH(1,1) structure is held fixed while the innovation distribution varies.
 
-### Normal
+<details>
+<summary><b>Normal code</b></summary>
 
 ```r
 qqnorm(resid.garch.norm,
@@ -209,16 +206,10 @@ qqline(resid.garch.norm,
 
 fit.norm 
 ```
+</details>
 
-**Bayes:** $-6.6111$
-
-<p align="center">
-  <img src=".github/images/Normal%20QQ-plot.png" width="50%">
-</p>
-
-### Student-t
-
-Financial returns often have heavier tails than the normal distribution; the Student-t assigns more probability to extreme returns.
+<details>
+<summary><b>Student-t code</b></summary>
 
 ```r
 spec.t <- ugarchspec(variance.model = list(model = "sGARCH",
@@ -240,16 +231,10 @@ qqplot(theory.t, resid.t,
 
 abline(0, 1, col = "blue", lwd = 2)
 ```
+</details>
 
-**Bayes:** $-6.6530$
-
-<p align="center">
-  <img src=".github/images/Student%20t%20QQ-Plot.png" width="50%">
-</p>
-
-### Skewed Student-t
-
-Allows both heavy tails and asymmetry, so large negative returns can behave differently from large positive returns.
+<details>
+<summary><b>Skewed Student-t code</b></summary>
 
 ```r
 spec.sstd <- ugarchspec(variance.model = list(model = "sGARCH",
@@ -274,14 +259,13 @@ qqplot(theory.sstd, resid.sstd,
 abline(0, 1, col = "blue", lwd = 2)
 
 ```
-
-**Bayes:** $-6.6573$ · $\alpha = 0.127920$ · $\beta = 0.839292$
+</details>
 
 <p align="center">
-  <img src=".github/images/Skwed%20student%20t%20QQ-Plot.png" width="50%">
+  <img src=".github/images/Normal%20QQ-plot.png" width="32%">
+  <img src=".github/images/Student%20t%20QQ-Plot.png" width="32%">
+  <img src=".github/images/Skwed%20student%20t%20QQ-Plot.png" width="32%">
 </p>
-
-### Final choice
 
 | Distribution | Bayes |
 |---|---|
@@ -290,6 +274,8 @@ abline(0, 1, col = "blue", lwd = 2)
 | **Skewed Student-t** | **−6.6573** |
 
 Both t-distributions fit the tails better than the normal; the skewed Student-t captures the **left tail** slightly better, which matters directly for VaR. Selected on BIC.
+
+Skewed-t fit parameters: $\alpha = 0.127920$, $\beta = 0.839292$.
 
 ### Diagnostics (skewed Student-t)
 
