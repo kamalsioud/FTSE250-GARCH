@@ -450,7 +450,7 @@ plot(1:300, sigma.forecast, type = "l",
 
 Volatility declines slightly and levels off as the effect of recent shocks decays. The path has effectively converged by day 300:
 
-$$\lim_{k \to \infty} \hat{\sigma}_{t+k \mid t} \approx 0.008641 \quad (\approx 0.864\% \text{ per day})$$
+$$\lim_{k \to \infty} \hat{\sigma}_{t+k \mid t} \approx 0.008641$$
 
 ---
 
