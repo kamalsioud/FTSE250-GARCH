@@ -40,17 +40,26 @@ ARMA–GARCH modelling of FTSE 250 daily log returns (29/01/2010 – 17/02/2023)
 Index prices exhibit a long-run trend, so log returns are used for modelling.
 
 ```r
-plot(prices.dat, ylab = "Raw Price", main = "FTSE 250 Daily Prices")
-plot(log.returns, ylab = "Log Returns", main = "FTSE 250 Daily Log Returns")
+plot(prices.dat, ylab = "Raw Price",
+     main = "FTSE 250 Daily Prices")
 
-adf.test(as.numeric(prices.dat))
-adf.test(log.numeric)
+plot(log.returns, ylab = "Log Returns",
+     main = "FTSE 250 Daily Log Returns")
 ```
 
 <p align="center">
   <img src=".github/images/Raw%20Price%20Plot.png" width="48%">
   <img src=".github/images/Log%20Return%20Plot.png" width="48%">
 </p>
+
+Raw prices do not fluctuate around a fixed mean. Log returns fluctuate around zero with time-varying spread, suggesting volatility clustering.
+
+The Augmented Dickey–Fuller test gives a formal check:
+
+```r
+adf.test(as.numeric(prices.dat))
+adf.test(log.numeric)
+```
 
 | Series | ADF p-value | Conclusion (5%) |
 |---|---|---|
@@ -59,18 +68,18 @@ adf.test(log.numeric)
 
 > `tseries::adf.test` truncates p-values at 0.01, so the true value is at most 0.01.
 
-Raw prices do not fluctuate around a fixed mean. Log returns fluctuate around zero with time-varying spread, suggesting volatility clustering.
-
 ---
 
 ## 2. Serial Dependence and Volatility Clustering
 
 ```r
-acf(log.numeric,   main = "ACF: FTSE 250 Log Returns")
+acf(log.numeric, main = "ACF: FTSE 250 Log Returns")
+
 acf(log.numeric^2, main = "ACF: Squared FTSE 250 Log Returns")
 
-Box.test(log.numeric,   lag = 10, type = "Ljung-Box")
-Box.test(log.numeric^2, lag = 10, type = "Ljung-Box")
+Box.test(log.numeric, lag  = 10, type = "Ljung-Box")
+
+Box.test(log.numeric^2, lag  = 10, type = "Ljung-Box")
 ```
 
 <p align="center">
@@ -91,8 +100,10 @@ Box.test(log.numeric^2, lag = 10, type = "Ljung-Box")
 ## 3. ARMA Model Selection (BIC)
 
 ```r
-arma.fit <- auto.arima(log.numeric, max.p = 9, max.q = 9,
-                       ic = "bic", approximation = FALSE)
+arma.fit <- auto.arima(log.numeric, max.p = 9,  max.q = 9,
+           ic = "bic",
+           approximation = FALSE)
+arma.fit
 ```
 
 **Selected:** ARIMA(1,0,0), BIC $= -20708.26$
@@ -101,11 +112,17 @@ arma.fit <- auto.arima(log.numeric, max.p = 9, max.q = 9,
 
 ```r
 arma.resid <- as.numeric(residuals(arma.fit))
-acf(arma.resid,   main = "ACF: AR(1) Residuals")
+
+acf(arma.resid, main = "ACF: AR(1) Residuals")
+
 acf(arma.resid^2, main = "ACF: Squared AR(1) Residuals")
 
-Box.test(arma.resid,   lag = 10, type = "Ljung-Box", fitdf = 1)
-Box.test(arma.resid^2, lag = 10, type = "Ljung-Box")
+Box.test(arma.resid, lag   = 10,
+         type  = "Ljung-Box",
+         fitdf = 1)
+
+Box.test(arma.resid^2, lag  = 10,
+         type = "Ljung-Box")
 ```
 
 <p align="center">
@@ -126,11 +143,16 @@ The lag-1 spike is removed, but the joint test still rejects white noise. Square
 
 ```r
 spec.norm <- ugarchspec(
-  variance.model     = list(model = "sGARCH", garchOrder = c(1, 1)),
-  mean.model         = list(armaOrder = c(1, 0)),
-  distribution.model = "norm")
+  variance.model = list(model = "sGARCH",
+                        garchOrder = c(1, 1)),
+  mean.model = list(armaOrder = c(1, 0)),
+  distribution.model = "norm"
+)
 
-fit.norm <- ugarchfit(spec = spec.norm, data = log.numeric)
+fit.norm <- ugarchfit(spec = spec.norm,
+                      data = log.numeric)
+
+fit.norm
 ```
 
 **Bayes (BIC):** $-6.6111$
@@ -138,10 +160,23 @@ fit.norm <- ugarchfit(spec = spec.norm, data = log.numeric)
 ### Diagnostics
 
 ```r
-resid.garch.norm <- as.numeric(residuals(fit.norm, standardize = TRUE))
+resid.garch.norm <- as.numeric(residuals(fit.norm,
+                                         standardize = TRUE))
 
-Box.test(resid.garch.norm,   lag = 10, type = "Ljung-Box", fitdf = 1)
-Box.test(resid.garch.norm^2, lag = 10, type = "Ljung-Box")
+acf(resid.garch.norm,
+    main = "ACF: Standardised Residuals, AR(1)-GARCH(1,1)")
+
+acf(resid.garch.norm^2,
+    main = "ACF: Squared Standardised Residuals, AR(1)-GARCH(1,1)")
+
+Box.test(resid.garch.norm,
+         lag   = 10,
+         type  = "Ljung-Box",
+         fitdf = 1)
+
+Box.test(resid.garch.norm^2,
+         lag  = 10,
+         type = "Ljung-Box")
 ```
 
 <p align="center">
@@ -162,52 +197,91 @@ No remaining serial correlation or ARCH effects — a substantial improvement ov
 
 The AR(1)–GARCH(1,1) structure is held fixed while the innovation distribution varies.
 
-<details>
-<summary><b>Student-t code</b></summary>
+### Normal
 
 ```r
-spec.t <- ugarchspec(
-  variance.model     = list(model = "sGARCH", garchOrder = c(1, 1)),
-  mean.model         = list(armaOrder = c(1, 0)),
+qqnorm(resid.garch.norm,
+       main = "Normal Q-Q Plot")
+
+qqline(resid.garch.norm,
+       col = "blue",
+       lwd = 2)
+
+fit.norm 
+```
+
+**Bayes:** $-6.6111$
+
+<p align="center">
+  <img src=".github/images/Normal%20QQ-plot.png" width="50%">
+</p>
+
+### Student-t
+
+Financial returns often have heavier tails than the normal distribution; the Student-t assigns more probability to extreme returns.
+
+```r
+spec.t <- ugarchspec(variance.model = list(model = "sGARCH",
+                        garchOrder = c(1, 1)),
+  mean.model = list(armaOrder = c(1, 0)),
   distribution.model = "std")
 
-fit.t   <- ugarchfit(spec = spec.t, data = log.numeric)
+fit.t <- ugarchfit(spec = spec.t, data = log.numeric)
+fit.t
+
 resid.t <- as.numeric(residuals(fit.t, standardize = TRUE))
 
-theory.t <- qdist("std", p = ppoints(length(resid.t)),
-                  shape = coef(fit.t)["shape"])
-qqplot(theory.t, resid.t, main = "Student-t Q-Q Plot",
-       xlab = "Theoretical Quantiles", ylab = "Sample Quantiles")
+theory.t <- qdist("std", p = ppoints(length(resid.t)), shape = coef(fit.t)["shape"])
+
+qqplot(theory.t, resid.t,
+       main = "Student-t Q-Q Plot",
+       xlab = "Theoretical Quantiles",
+       ylab = "Sample Quantiles")
+
 abline(0, 1, col = "blue", lwd = 2)
 ```
-</details>
 
-<details>
-<summary><b>Skewed Student-t code</b></summary>
+**Bayes:** $-6.6530$
+
+<p align="center">
+  <img src=".github/images/Student%20t%20QQ-Plot.png" width="50%">
+</p>
+
+### Skewed Student-t
+
+Allows both heavy tails and asymmetry, so large negative returns can behave differently from large positive returns.
 
 ```r
-spec.sstd <- ugarchspec(
-  variance.model     = list(model = "sGARCH", garchOrder = c(1, 1)),
-  mean.model         = list(armaOrder = c(1, 0)),
+spec.sstd <- ugarchspec(variance.model = list(model = "sGARCH",
+                        garchOrder = c(1, 1)),
+  mean.model = list(armaOrder = c(1, 0)),
   distribution.model = "sstd")
 
-fit.sstd   <- ugarchfit(spec = spec.sstd, data = log.numeric)
+fit.sstd <- ugarchfit(spec = spec.sstd, data = log.numeric)
+fit.sstd
+
 resid.sstd <- as.numeric(residuals(fit.sstd, standardize = TRUE))
 
 theory.sstd <- qdist("sstd", p = ppoints(length(resid.sstd)),
                      skew  = coef(fit.sstd)["skew"],
                      shape = coef(fit.sstd)["shape"])
-qqplot(theory.sstd, resid.sstd, main = "Skewed Student-t Q-Q Plot",
-       xlab = "Theoretical Quantiles", ylab = "Sample Quantiles")
+
+qqplot(theory.sstd, resid.sstd,
+       main = "Skewed Student-t Q-Q Plot",
+       xlab = "Theoretical Quantiles",
+       ylab = "Sample Quantiles")
+
 abline(0, 1, col = "blue", lwd = 2)
+
 ```
-</details>
+
+**Bayes:** $-6.6573$ · $\alpha = 0.127920$ · $\beta = 0.839292$
 
 <p align="center">
-  <img src=".github/images/Normal%20QQ-plot.png" width="32%">
-  <img src=".github/images/Student%20t%20QQ-Plot.png" width="32%">
-  <img src=".github/images/Skwed%20student%20t%20QQ-Plot.png" width="32%">
+  <img src=".github/images/Skwed%20student%20t%20QQ-Plot.png" width="50%">
 </p>
+
+### Final choice
 
 | Distribution | Bayes |
 |---|---|
@@ -217,9 +291,19 @@ abline(0, 1, col = "blue", lwd = 2)
 
 Both t-distributions fit the tails better than the normal; the skewed Student-t captures the **left tail** slightly better, which matters directly for VaR. Selected on BIC.
 
-Skewed-t fit parameters: $\alpha = 0.127920$, $\beta = 0.839292$.
-
 ### Diagnostics (skewed Student-t)
+
+```r
+acf(resid.sstd, main = "ACF: Skewed-t AR(1)-GARCH(1,1)")
+
+acf(resid.sstd^2, main = "ACF: Squared Skewed-t AR(1)-GARCH(1,1)")
+
+Box.test(resid.sstd, lag   = 10, type  = "Ljung-Box",
+         fitdf = 1)
+
+Box.test(resid.sstd^2, lag  = 10,
+         type = "Ljung-Box")
+```
 
 <p align="center">
   <img src=".github/images/ACF%20Skewed%20student%20t.png" width="48%">
@@ -247,16 +331,22 @@ Standard GARCH enters shocks squared, so positive and negative shocks of equal s
 
 ```r
 Rt_squared <- log.numeric[-1]^2
-Rt_lagged  <- log.numeric[-length(log.numeric)]
-cor(Rt_squared, Rt_lagged)
+Rt_lagged <- log.numeric[-length(log.numeric)]
+
+leverage.cor <- cor(Rt_squared, Rt_lagged)
+leverage.cor
 
 abs_after_pos <- abs(log.numeric[-1][Rt_lagged > 0])
 abs_after_neg <- abs(log.numeric[-1][Rt_lagged < 0])
 
-qqplot(abs_after_pos, abs_after_neg, main = "Leverage Effect",
+qqplot(abs_after_pos, abs_after_neg,
+       main = "Leverage Effect",
        xlab = "Quantiles of |Rt| after Positive Returns",
        ylab = "Quantiles of |Rt| after Negative Returns")
-abline(0, 1, col = "blue", lwd = 2)
+
+abline(0, 1, col = "blue",
+       lwd = 2)
+
 ```
 
 <p align="center">
@@ -269,30 +359,45 @@ $\text{corr}(R_t^2, R_{t-1}) = -0.1144614$, and the Q-Q points drift above the 4
 
 ```r
 spec.egarch <- ugarchspec(
-  variance.model     = list(model = "eGARCH", garchOrder = c(1, 1)),
-  mean.model         = list(armaOrder = c(1, 0)),
+  variance.model = list(model = "eGARCH",
+                        garchOrder = c(1, 1)),
+  mean.model = list(armaOrder = c(1, 0)),
   distribution.model = "sstd")
 
-fit.egarch   <- ugarchfit(spec = spec.egarch, data = log.numeric)
+fit.egarch <- ugarchfit(spec = spec.egarch, data = log.numeric)
+fit.egarch
+
 resid.egarch <- as.numeric(residuals(fit.egarch, standardize = TRUE))
 
-Box.test(resid.egarch,   lag = 10, type = "Ljung-Box", fitdf = 1)
-Box.test(resid.egarch^2, lag = 10, type = "Ljung-Box")
+Box.test(resid.egarch, lag = 10,
+         type = "Ljung-Box",
+         fitdf = 1)
+
+Box.test(resid.egarch^2, lag = 10,
+         type = "Ljung-Box")
+
 ```
 
 ### APARCH
 
 ```r
 spec.aparch <- ugarchspec(
-  variance.model     = list(model = "apARCH", garchOrder = c(1, 1)),
-  mean.model         = list(armaOrder = c(1, 0)),
+  variance.model = list(model = "apARCH",
+                        garchOrder = c(1, 1)),
+  mean.model = list(armaOrder = c(1, 0)),
   distribution.model = "sstd")
 
-fit.aparch   <- ugarchfit(spec = spec.aparch, data = log.numeric)
+fit.aparch <- ugarchfit(spec = spec.aparch, data = log.numeric)
+fit.aparch
+
 resid.aparch <- as.numeric(residuals(fit.aparch, standardize = TRUE))
 
-Box.test(resid.aparch,   lag = 10, type = "Ljung-Box", fitdf = 1)
-Box.test(resid.aparch^2, lag = 10, type = "Ljung-Box")
+Box.test(resid.aparch, lag = 10,
+         type = "Ljung-Box",
+         fitdf = 1)
+
+Box.test(resid.aparch^2, lag = 10,
+         type = "Ljung-Box")
 ```
 
 ### Comparison
@@ -317,18 +422,21 @@ where $q_{0.01}$ is the 1% quantile of the fitted skewed Student-t.
 
 ```r
 P <- 10000
+
 forecast.egarch <- ugarchforecast(fit.egarch, n.ahead = 300)
 
 sigma.forecast <- as.numeric(sigma(forecast.egarch))
-mu.forecast    <- as.numeric(fitted(forecast.egarch))
+mu.forecast <- as.numeric(fitted(forecast.egarch))
 
 q.sstd <- qdist("sstd", p = 0.01,
-                skew  = coef(fit.egarch)["skew"],
+                skew = coef(fit.egarch)["skew"],
                 shape = coef(fit.egarch)["shape"])
 
 VaR.forecast <- -P * (mu.forecast + q.sstd * sigma.forecast)
+VaR.forecast
 max(VaR.forecast)
 which.max(VaR.forecast)
+
 ```
 
 | Output | Value |
@@ -343,8 +451,10 @@ The AR(1) mean reverts faster than conditional volatility, so VaR rises slightly
 ```r
 sigma.forecast[300]
 
-plot(1:300, sigma.forecast, type = "l", lwd = 2,
-     xlab = "Days Ahead", ylab = "Conditional Volatility",
+plot(1:300, sigma.forecast, type = "l",
+     lwd = 2,
+     xlab = "Days Ahead",
+     ylab = "Conditional Volatility",
      main = "300-Day Forecast of Conditional Volatility")
 ```
 
