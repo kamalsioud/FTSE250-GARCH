@@ -48,8 +48,8 @@ adf.test(log.numeric)
 ```
 
 <p align="center">
-  <img src="figures/raw_price.png" width="48%">
-  <img src="figures/log_returns.png" width="48%">
+  <img src=".github/images/Raw%20Price%20Plot.png" width="48%">
+  <img src=".github/images/Log%20Return%20Plot.png" width="48%">
 </p>
 
 | Series | ADF p-value | Conclusion (5%) |
@@ -74,8 +74,8 @@ Box.test(log.numeric^2, lag = 10, type = "Ljung-Box")
 ```
 
 <p align="center">
-  <img src=".github/images/acf_log_returns.png" width="48%">
-  <img src=".github/images/acf_sq_log_returns.png" width="48%">
+  <img src=".github/images/ACF%20Log%20Returns.png" width="48%">
+  <img src=".github/images/ACF%5E2%20Log%20returns.png" width="48%">
 </p>
 
 | Test | p-value |
@@ -109,8 +109,8 @@ Box.test(arma.resid^2, lag = 10, type = "Ljung-Box")
 ```
 
 <p align="center">
-  <img src="figures/acf_ar_resid.png" width="48%">
-  <img src="figures/acf_sq_ar_resid.png" width="48%">
+  <img src=".github/images/ACF%20AR%20res.png" width="48%">
+  <img src=".github/images/ACF%20AR%5E2%20res.png" width="48%">
 </p>
 
 | Test | p-value |
@@ -145,8 +145,8 @@ Box.test(resid.garch.norm^2, lag = 10, type = "Ljung-Box")
 ```
 
 <p align="center">
-  <img src="figures/acf_ar_garch.png" width="48%">
-  <img src="figures/acf_sq_ar_garch.png" width="48%">
+  <img src=".github/images/ACF%20AR-GARCH.png" width="48%">
+  <img src=".github/images/ACF%5E2%20AR-GARCH.png" width="48%">
 </p>
 
 | Test | p-value |
@@ -204,9 +204,9 @@ abline(0, 1, col = "blue", lwd = 2)
 </details>
 
 <p align="center">
-  <img src="figures/qq_normal.png" width="32%">
-  <img src="figures/qq_student_t.png" width="32%">
-  <img src="figures/qq_skewed_t.png" width="32%">
+  <img src=".github/images/Normal%20QQ-plot.png" width="32%">
+  <img src=".github/images/Student%20t%20QQ-Plot.png" width="32%">
+  <img src=".github/images/Skwed%20student%20t%20QQ-Plot.png" width="32%">
 </p>
 
 | Distribution | Bayes |
@@ -222,8 +222,8 @@ Skewed-t fit parameters: $\alpha = 0.127920$, $\beta = 0.839292$.
 ### Diagnostics (skewed Student-t)
 
 <p align="center">
-  <img src="figures/acf_skewed_t.png" width="48%">
-  <img src="figures/acf_sq_skewed_t.png" width="48%">
+  <img src=".github/images/ACF%20Skewed%20student%20t.png" width="48%">
+  <img src=".github/images/ACF%20skewed%20student%20t%20squared.png" width="48%">
 </p>
 
 | Test | p-value |
@@ -260,7 +260,7 @@ abline(0, 1, col = "blue", lwd = 2)
 ```
 
 <p align="center">
-  <img src="figures/leverage.png" width="50%">
+  <img src=".github/images/Leverage.png" width="50%">
 </p>
 
 $\text{corr}(R_t^2, R_{t-1}) = -0.1144614$, and the Q-Q points drift above the 45° line: negative returns are followed by larger volatility. This motivates EGARCH and APARCH (cf. Hansen & Lunde, 2005; Amrani & Zeghdoudi, 2021). The skewed Student-t distribution is retained so that the comparison isolates the variance specification.
@@ -349,7 +349,7 @@ plot(1:300, sigma.forecast, type = "l", lwd = 2,
 ```
 
 <p align="center">
-  <img src="figures/conditional_vol.png" width="60%">
+  <img src=".github/images/Conditional%20vol.png" width="60%">
 </p>
 
 Volatility declines slightly and levels off as the effect of recent shocks decays. The path has effectively converged by day 300:
