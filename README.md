@@ -74,8 +74,8 @@ Box.test(log.numeric^2, lag = 10, type = "Ljung-Box")
 ```
 
 <p align="center">
-  <img src="figures/acf_log_returns.png" width="48%">
-  <img src="figures/acf_sq_log_returns.png" width="48%">
+  <img src=".github/images/acf_log_returns.png" width="48%">
+  <img src=".github/images/acf_sq_log_returns.png" width="48%">
 </p>
 
 | Test | p-value |
